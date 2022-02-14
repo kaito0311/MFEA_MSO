@@ -7,6 +7,8 @@ class AbstractCrossover():
         pass
     def __call__(self, pa: Individual, pb: Individual, *args, **kwargs) -> Tuple[Individual, Individual]:
         pass
+    def update(self, *args, **kwargs) -> None:
+        pass
 
 class SBX_Crossover(AbstractCrossover):
     '''
@@ -35,4 +37,5 @@ class newSBX(AbstractCrossover):
     '''
     pa, pb in [0, 1]^n
     '''
+    #TODO
     pass

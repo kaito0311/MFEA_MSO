@@ -1,6 +1,5 @@
 import numpy as np
 from ..EA import Individual
-import copy
 
 class AbstractMutation():
     def __init__(self, *arg, **kwargs):
@@ -65,4 +64,17 @@ class GaussMutation(AbstractMutation):
 
         idx_mutation = np.where(np.random.rand(ind.__dim__) <= self.pm)[0]
         
-        t = ind[idx_mutation] + np.random.normal(0, self.scale, size = len(idx_mutation))
+        mutate_genes = ind[idx_mutation] + np.random.normal(0, self.scale, size = len(idx_mutation))
+
+        mutate_genes = np.where(mutate_genes > 1, ind[idx_mutation] + np.random.rand(len(idx_mutation)) * (1 - ind[idx_mutation]), mutate_genes)
+        mutate_genes = np.where(mutate_genes < 0, np.random.rand(len(idx_mutation)) * ind[idx_mutation], mutate_genes)
+        
+        new_genes = ind.genes
+        new_genes[idx_mutation] = mutate_genes
+        new_ind = Individual(new_genes)
+        new_ind.skill_factor = ind.skill_factor
+        return new_ind
+
+class GMDScale(AbstractMutation):
+    #TODO
+    pass

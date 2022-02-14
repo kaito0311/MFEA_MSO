@@ -1,4 +1,3 @@
-from asyncio import SubprocessProtocol
 import numpy as np
 from .tasks.function import AbstractFunc
 
@@ -21,7 +20,10 @@ class Population:
             self.pop: list[SubPopulation] = [
                 SubPopulation(skf, num_inds_each_task[skf], dim, bound, list_tasks[skf]) for skf in range(len(num_inds_each_task))
             ]
-    
+    def __len__(self):
+        return len(self.pop)
+    def __getitem__(self, index):
+        return self.pop[index]
 
 
 class SubPopulation:
@@ -52,11 +54,22 @@ class SubPopulation:
         self.factorial_rank = np.argsort(np.argsort([ind.fcost for ind in self.inds])) + 1
         self.scalar_fitness = 1/self.factorial_rank
 
+    def select(self, index_selected_inds):
+        self.inds = self.inds[index_selected_inds]
+        self.factorial_rank = self.factorial_rank[index_selected_inds]
+        self.scalar_fitness = self.scalar_fitness[index_selected_inds]
+        
 class Individual:
     def __init__(self, genes) -> None: 
         self.genes: np.ndarray = genes
         self.skill_factor: int = None
         self.fcost: float = None
+
+    def eval(self, task: AbstractFunc) -> None:
+        self.fcost = task.func(self.genes)
+
+
+
 
     def __repr__(self) -> str:
         return 'Genes: {}\nSkill_factor: {}'.format(str(self.genes), str(self.skill_factor))
