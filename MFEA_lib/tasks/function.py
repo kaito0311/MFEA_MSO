@@ -138,14 +138,17 @@ class Schwefel(AbstractFunc):
         global optima = 420.9687^d
     '''
     def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None, fixed = False):
-        self.global_optimal = np.array([0] * dim)
+        if fixed:
+            self.global_optimal = np.array([420.968746] * dim)
+        else:
+            self.global_optimal = np.array([420.9687] * dim)
         super().__init__(dim, shift, rotation_matrix, bound)
         self.fixed = fixed
-        
+
     def __call__(self, x):
         x = self.decode(x)
         if self.fixed:
-            return (418.9828872724336455576189785193)   *self.dim - np.sum(x * np.sin(np.sqrt(np.abs(x)))) 
+            return (418.9828872724336455576189785193) * self.dim - np.sum(x * np.sin(np.sqrt(np.abs(x)))) 
         else:
             return 418.9829*self.dim - np.sum(x * np.sin(np.sqrt(np.abs(x)))) 
     
@@ -153,6 +156,10 @@ class Griewank(AbstractFunc):
     ''' 
     global optima = [0] ^ d
     '''
+    def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None):
+        self.global_optimal = np.array([0] * dim)
+        super().__init__(dim, shift, rotation_matrix, bound)
+
     def __call__(self, x):
         x = self.decode(x)
         return np.sum(x**2) / 4000 \
@@ -163,6 +170,10 @@ class Rastrigin(AbstractFunc):
     ''' 
     global optima = 0 ^ d
     '''
+    def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None):
+        self.global_optimal = np.array([0] * dim)
+        super().__init__(dim, shift, rotation_matrix, bound)
+        
     def __call__(self, x):
         x = self.decode(x)
         
