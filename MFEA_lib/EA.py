@@ -102,13 +102,13 @@ class SubPopulation:
         self.scalar_fitness: np.ndarray = None
         self.update_rank()
         
-    def __len__(self):
+    def __len__(self): # v 
         return len(self.ls_inds)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index): # v 
         return self.ls_inds[index]
 
-    def __getRandomItem__(self, size):
+    def __getRandomItem__(self, size): #NOTE 
         return self.ls_inds[np.random.choice(len(self), size)]
 
     def __addIndividual__(self, individual: Individual, update_rank = False):
