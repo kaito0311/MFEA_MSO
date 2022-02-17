@@ -5,19 +5,19 @@ from ..EA import *
 class AbstractSelection():
     def __init__(self) -> None:
         pass
-    def __call__(self, population:Population, *args, **kwds) -> None:
+    def __call__(self, population:Population, nb_inds_tasks:list, *args, **kwds) -> list:
         pass
     def getInforTasks(self, tasks: list[AbstractFunc]):
         self.dim_uss = max([t.dim for t in tasks])
         pass
 class ElitismSelection(AbstractSelection):
-    def __call__(self, population:Population, num_inds_each_task: list, *args, **kwds) -> list:
-        list_selected = []
+    def __call__(self, population:Population, nb_inds_tasks: list, *args, **kwds) -> list:
+        ls_idx_selected = []
         for idx_subpop, subpop in enumerate(population):
-            N_i = min(num_inds_each_task[idx_subpop], len(subpop))
+            N_i = min(nb_inds_tasks[idx_subpop], len(subpop))
         
             idx_selected_inds = np.where(subpop.scalar_fitness > 1/(N_i + 1))[0]
             subpop.select(idx_selected_inds)
 
-            list_selected.append(idx_selected_inds)
-        return list_selected
+            ls_idx_selected.append(idx_selected_inds)
+        return ls_idx_selected
