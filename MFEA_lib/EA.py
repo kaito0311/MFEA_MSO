@@ -1,7 +1,9 @@
 import random
+from re import I
+from typing import Type
 import numpy as np
 from .tasks.function import AbstractFunc
-
+from operator import itemgetter 
 class Individual:
     def __init__(self, genes) -> None: 
         self.genes: np.ndarray = genes
@@ -107,12 +109,20 @@ class SubPopulation:
         return len(self.ls_inds)
 
     def __getitem__(self, index):
-        return self.ls_inds[index]
+        try:
+            return self.ls_inds[index]
+        except:
+            if type(index) == list:
+                return [self.ls_inds[i] for i in index]
+            else:
+                raise TypeError('Int, Slice or list[int], not ' + type(index))
 
     def __getRandomItems__(self, size:int = None, replace:bool = False):
+        if size == 0:
+            return []
         if size == None:
             return self.ls_inds[np.random.choice(len(self), size = None, replace= replace)]
-        return [self.ls_inds[i] for i in np.random.choice(len(self), size= size, replace= replace)]
+        return [self.ls_inds[idx] for idx in np.random.choice(len(self), size= size, replace= replace).tolist()]
 
     def __addIndividual__(self, individual: Individual, update_rank = False):
         if individual.fcost is None:
@@ -141,13 +151,9 @@ class SubPopulation:
         self.factorial_rank = np.argsort(np.argsort([ind.fcost for ind in self.ls_inds])) + 1
         self.scalar_fitness = 1/self.factorial_rank
 
-    def select(self, index_selected_inds):
-        #NOTE
-        # self.ls_inds = self.ls_inds[index_selected_inds]
-        new_ls_inds = []
-        for idx in index_selected_inds:
-            new_ls_inds.append(self.ls_inds[idx])
-        self.ls_inds = new_ls_inds
+    def select(self, index_selected_inds: list):
+        self.ls_inds = [self.ls_inds[idx] for idx in index_selected_inds]
+
         self.factorial_rank = self.factorial_rank[index_selected_inds]
         self.scalar_fitness = self.scalar_fitness[index_selected_inds]
         
@@ -162,12 +168,44 @@ class Population:
         assert len(nb_inds_tasks) == len(list_tasks)
 
         if evaluate_initial_skillFactor:
+            # empty population
             self.ls_subPop: list[SubPopulation] = [
                 SubPopulation(skf, 0, dim, bound, list_tasks[skf]) for skf in range(len(nb_inds_tasks))
             ]
-            # TODO 
-            pass
 
+            # list individual (don't have skill factor)
+            ls_inds = [
+                Individual(np.random.uniform(bound[0], bound[1], size= (dim, )))
+                for i in range(np.sum(nb_inds_tasks))
+            ]
+            # matrix factorial cost and matrix rank
+            matrix_cost = np.array([np.apply_along_axis(t.func, 1, np.array([ind.genes for ind in ls_inds])) for t in list_tasks]).T
+            matrix_rank_pop = np.argsort(np.argsort(matrix_cost, axis = 0), axis = 0) 
+
+            count_inds = np.zeros((len(list_tasks),))
+            
+            #condition flag
+            condition = False
+            
+            while not condition:
+                # random task do not have enough individual
+                idx_task = np.random.choice(np.where(count_inds < nb_inds_tasks)[0])
+                # get best individual of task
+                idx_ind = np.argsort(matrix_rank_pop[:, idx_task])[0]
+
+                # set skill factor
+                ls_inds[idx_ind].skill_factor = idx_task
+                # add individual
+                self.__addIndividual__(ls_inds[idx_ind])
+
+                # set worst rank for ind
+                matrix_rank_pop[idx_ind] = len(ls_inds) + 1
+                count_inds[idx_task] += 1
+
+                condition = np.all(count_inds == nb_inds_tasks)             
+
+            for i in range(len(list_tasks)):
+                self.ls_subPop[i].update_rank()
         else:
             self.ls_subPop: list[SubPopulation] = [
                 SubPopulation(skf, nb_inds_tasks[skf], dim, bound, list_tasks[skf]) for skf in range(len(nb_inds_tasks))
@@ -191,9 +229,9 @@ class Population:
         if size == None:
             return self.ls_subPop[np.random.randint(0, self.nb_tasks)].__getRandomItems__(None, replace) 
         else:
-            nb_randInds = np.zeros((self.nb_tasks, ), dtype= int)
-            for i in range(size):
-                nb_randInds[np.random.randint(self.nb_tasks)] += 1
+            nb_randInds = [0] * self.nb_tasks
+            for idx in np.random.choice(self.nb_tasks, size = size, replace= True).tolist():
+                nb_randInds[idx] += 1
 
             res = []
             for idx, nb_inds in enumerate(nb_randInds):

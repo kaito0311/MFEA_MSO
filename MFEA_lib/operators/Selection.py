@@ -16,7 +16,7 @@ class ElitismSelection(AbstractSelection):
         for idx_subpop, subpop in enumerate(population):
             N_i = min(nb_inds_tasks[idx_subpop], len(subpop))
         
-            idx_selected_inds = np.where(subpop.scalar_fitness > 1/(N_i + 1))[0]
+            idx_selected_inds = np.where(subpop.scalar_fitness > 1/(N_i + 1))[0].tolist()
             subpop.select(idx_selected_inds)
 
             ls_idx_selected.append(idx_selected_inds)
