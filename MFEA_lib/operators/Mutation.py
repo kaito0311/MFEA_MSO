@@ -1,4 +1,6 @@
 import numpy as np
+
+from MFEA_lib.tasks.function import AbstractFunc
 from ..EA import Individual
 
 class AbstractMutation():
@@ -6,7 +8,9 @@ class AbstractMutation():
         pass
     def __call__(self, p: Individual, *arg, **kwargs) -> Individual:
         pass
-
+    def getInforTasks(self, tasks: list[AbstractFunc]):
+        self.dim_uss = max([t.dim for t in tasks])
+        pass
 class NoMutation(AbstractMutation):
     def __call__(self, p: Individual, *arg, **kwargs) -> Individual:
         return p

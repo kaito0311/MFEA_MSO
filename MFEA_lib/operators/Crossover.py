@@ -1,5 +1,7 @@
 from typing import Tuple
 import numpy as np
+
+from MFEA_lib.tasks.function import AbstractFunc
 from ..EA import Individual
 
 class AbstractCrossover():
@@ -7,6 +9,10 @@ class AbstractCrossover():
         pass
     def __call__(self, pa: Individual, pb: Individual, *args, **kwargs) -> Tuple[Individual, Individual]:
         pass
+    def getInforTasks(self, tasks: list[AbstractFunc]):
+        self.dim_uss = max([t.dim for t in tasks])
+        pass
+    
     def update(self, *args, **kwargs) -> None:
         pass
 
