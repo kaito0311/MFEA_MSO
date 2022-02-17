@@ -63,23 +63,25 @@ class AbstractModel():
         self.selection.getInforTasks(tasks)
 
     
-    def fit(self, *args, **kwargs):
+    def fit(self, *args, **kwargs) -> list[Individual] :
         pass
 
 class MFEA_base(AbstractModel):
-    def compile(self, tasks: list[AbstractFunc], crossover: Crossover.SBX_Crossover, mutation: Mutation.Polynomial_Mutation, selection: Selection.ElitismSelection, *args, **kwargs):
+    def compile(self, tasks: list[AbstractFunc], 
+        crossover: Crossover.SBX_Crossover, mutation: Mutation.Polynomial_Mutation, selection: Selection.ElitismSelection, 
+        *args, **kwargs):
         return super().compile(tasks, crossover, mutation, selection, *args, **kwargs)
     
     def fit(self, nb_generations, rmp = 0.3, nb_inds_each_task = 100, bound_pop = [0, 1], evaluate_initial_skillFactor = True,
-            log_oneline = False, num_epochs_printed = 20, *args, **kwargs):
+            log_oneline = False, num_epochs_printed = 20, *args, **kwargs) -> list[Individual]:
         super().fit(*args, **kwargs)
 
         # initialize population
         population = Population(
-            nb_inds_tasks = [nb_inds_each_task] * len(tasks), 
+            nb_inds_tasks = [nb_inds_each_task] * len(self.tasks), 
             dim = self.dim_uss,
             bound= bound_pop,
-            list_tasks= tasks,
+            list_tasks= self.tasks,
             evaluate_initial_skillFactor = evaluate_initial_skillFactor
         )
 
@@ -90,16 +92,56 @@ class MFEA_base(AbstractModel):
             
             # initial offspring_population of generation
             offsprings = Population(
-                nb_inds_tasks = [0] * len(tasks), 
+                nb_inds_tasks = [0] * len(self.tasks), 
                 dim = self.dim_uss,
                 bound= bound_pop,
-                list_tasks= tasks,
+                list_tasks= self.tasks,
                 evaluate_initial_skillFactor = evaluate_initial_skillFactor
             )
 
             while len(offsprings) < len(population):
                 pa, pb = population.__getRandomInds__(2)
 
+                if pa.skill_factor == pb.skill_factor or np.random.rand() < rmp:
+                    # intra / inter crossover
+                    oa, ob = self.crossover(pa, pb)
+                    oa.skill_factor, ob.skill_factor = np.random.choice([pa.skill_factor, pb.skill_factor], size= 2, replace= True)
+                else:
+                    # mutate
+                    oa = self.mutation(pa)
+                    oa.skill_factor = pa.skill_factor
+
+                    ob = self.mutation(pb)    
+                    ob.skill_factor = pb.skill_factor
+                
+                offsprings.__addIndividual__(oa)
+                offsprings.__addIndividual__(ob)
+            
+            # merge and update rank
+            population = population + offsprings
+
+            # selection
+            self.selection(population, [nb_inds_each_task] * len(self.tasks))
+
+            # save history
+            self.history_cost.append([ind.fcost for ind in population.get_solves()])
+
+            #print
+            if (epoch + 1) % (nb_generations // num_epochs_printed) == 0:
+                if log_oneline == True:
+                    sys.stdout.write('\r')
+                sys.stdout.write('Epoch [{}/{}], [%-20s] %3d%% ,func_val: {}'
+                    .format(epoch + 1, nb_generations,self.history_cost[-1])
+                    % ('=' * ((epoch + 1) // (nb_generations // 20)) + '>' , (epoch + 1) * 100 // nb_generations)
+                    )
+                if log_oneline == False:
+                    print("\n")
+                sys.stdout.flush()
+        print('END!')
+
+        #solve
+        self.last_pop = population
+        return self.last_pop.get_solves() 
 
 class MFEA1(AbstractModel):
     pass

@@ -2,8 +2,9 @@ import numpy as np
 
 class AbstractFunc():
     limited_space = False
-    upper_bound = None
-    lower_bound = None
+    # upper_bound = None
+    # lower_bound = None
+    bound = (None, None)
     global_optimal = 0
 
     def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None, *args, **kwargs):
@@ -25,10 +26,15 @@ class AbstractFunc():
         
         if bound is not None:
             self.limited_space = True
-            self.lower_bound, self.upper_bound = bound
-            self.name = self.__class__.__name__ + ': [' + str(self.lower_bound) + ', ' + str(self.upper_bound) + ']^' + str(dim)
+            self.bound = bound
+            self.name = self.__class__.__name__ + ': [' + str(self.bound[0]) + ', ' + str(self.bound[1]) + ']^' + str(dim)
         else:
             self.name = self.__class__.__name__ + ': R^' + str(dim)
+
+    def __eq__(self, other: object) -> bool:
+        if self.__repr__() == other.__repr__():
+            return True
+        return self.dim == other.dim and np.all(self.shift == other.shift) and self.bound == other.bound
 
     def encode(self, x):
         '''
@@ -37,7 +43,7 @@ class AbstractFunc():
         x_encode = x
         # x_encode = self.inv_rotation_matrix @ x_encode + self.shift
         if self.limited_space == True:
-            x_encode = (x_encode - self.lower_bound)/(self.upper_bound - self.lower_bound)
+            x_encode = (x_encode - self.bound[0])/(self.bound[1] - self.bound[0])
         return x_encode 
 
     def decode(self, x):
@@ -46,7 +52,7 @@ class AbstractFunc():
         '''
         x_decode = x[:self.dim]
         if self.limited_space == True:
-            x_decode = x_decode * (self.upper_bound - self.lower_bound) + self.lower_bound
+            x_decode = x_decode * (self.bound[1] - self.bound[0]) + self.bound[0]
         x_decode = self.rotation_matrix @ (x_decode - self.shift) 
         return x_decode
 

@@ -29,12 +29,12 @@ class Polynomial_Mutation(AbstractMutation):
     
     def __call__(self, ind: Individual, *arg, **kwargs) -> Individual:
         if self.pm is None:
-            self.pm = 1/ind.__dim__
+            self.pm = 1/self.dim_uss
 
-        idx_mutation = np.where(np.random.rand(ind.__dim__) <= self.pm)[0]
+        idx_mutation = np.where(np.random.rand(self.dim_uss) <= self.pm)[0]
 
         #NOTE 
-        u = np.zeros((ind.__dim__,)) + 0.5
+        u = np.zeros((self.dim_uss,)) + 0.5
         u[idx_mutation] = np.random.rand(len(idx_mutation))
 
         delta = np.where(u < 0.5,
@@ -47,9 +47,9 @@ class Polynomial_Mutation(AbstractMutation):
         new_ind = Individual(
             genes = np.where(delta < 0,
                 # delta_l: ind -> 0
-                ind + delta * ind,
+                ind.genes + delta * ind.genes,
                 # delta_r: ind -> 1
-                ind + delta * (1 - ind)
+                ind.genes + delta * (1 - ind.genes)
             )
         )
         new_ind.skill_factor = ind.skill_factor
@@ -64,9 +64,9 @@ class GaussMutation(AbstractMutation):
     
     def __call__(self, ind: Individual, *arg, **kwargs) -> Individual:
         if self.pm is None:
-            self.pm = 1/ind.__dim__
+            self.pm = 1/self.dim_uss
 
-        idx_mutation = np.where(np.random.rand(ind.__dim__) <= self.pm)[0]
+        idx_mutation = np.where(np.random.rand(self.dim_uss) <= self.pm)[0]
         
         mutate_genes = ind[idx_mutation] + np.random.normal(0, self.scale, size = len(idx_mutation))
 
