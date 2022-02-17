@@ -99,4 +99,10 @@ class MFEA_base(AbstractModel):
 
             while len(offsprings) < len(population):
                 pa, pb = population.__getRandomInds__(2)
-                
+
+
+class MFEA1(AbstractModel):
+    pass
+
+class SA_MFEA(AbstractModel):
+    pass
