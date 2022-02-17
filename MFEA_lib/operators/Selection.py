@@ -7,7 +7,9 @@ class AbstractSelection():
         pass
     def __call__(self, population:Population, *args, **kwds) -> None:
         pass
-
+    def getInforTasks(self, tasks: list[AbstractFunc]):
+        self.dim_uss = max([t.dim for t in tasks])
+        pass
 class ElitismSelection(AbstractSelection):
     def __call__(self, population:Population, num_inds_each_task: list, *args, **kwds) -> list:
         list_selected = []
