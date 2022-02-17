@@ -147,8 +147,3 @@ class Individual:
         else:
             return False
 
-
-
-
-
-
