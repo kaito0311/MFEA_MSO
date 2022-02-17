@@ -6,7 +6,7 @@ class AbstractFunc():
     lower_bound = None
     global_optimal = 0
 
-    def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None):
+    def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None, *args, **kwargs):
         self.dim = dim
 
         if rotation_matrix is not None:
@@ -21,7 +21,7 @@ class AbstractFunc():
         assert dim % len(tmp) == 0
         self.shift = np.array([[i] * int(dim / len(tmp)) for i in tmp ]).reshape(-1, )
 
-        self.global_optimal = np.array([self.global_optimal] * dim) + self.shift
+        self.global_optimal = self.inv_rotation_matrix @ self.global_optimal + self.shift
         
         if bound is not None:
             self.limited_space = True
@@ -35,7 +35,7 @@ class AbstractFunc():
         encode x to [0, 1]
         '''
         x_encode = x
-        x_encode = self.inv_rotation_matrix @ x_encode + self.shift
+        # x_encode = self.inv_rotation_matrix @ x_encode + self.shift
         if self.limited_space == True:
             x_encode = (x_encode - self.lower_bound)/(self.upper_bound - self.lower_bound)
         return x_encode 
@@ -60,6 +60,10 @@ class Sphere(AbstractFunc):
     '''
     global optima = 0^d
     '''
+    def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None):
+        self.global_optimal = np.array([0] * dim)
+        super().__init__(dim, shift, rotation_matrix, bound)
+
     def __call__(self, x):
         '''
         Request: input x is encoded
@@ -74,6 +78,10 @@ class Weierstrass(AbstractFunc):
     a = 0.5
     b = 3
     k_max = 21
+    def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None):
+        self.global_optimal = np.array([0] * dim)
+        super().__init__(dim, shift, rotation_matrix, bound)
+
     def __call__(self, x):
         '''
         Request: input x is encoded
@@ -97,8 +105,9 @@ class Ackley(AbstractFunc):
     b = 0.2
     c = 2*np.pi 
     def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None):
+        self.global_optimal = np.array([0] * dim)
         super().__init__(dim, shift, rotation_matrix, bound)
-        # return exact 0 in global optima
+
     def __call__(self, x):
         x = self.decode(x)
         return -self.a * np.exp(-self.b*np.sqrt(np.average(x**2)))\
@@ -111,6 +120,10 @@ class Rosenbrock(AbstractFunc):
     '''
     global optima = 1^d
     '''
+    def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None):
+        self.global_optimal = np.array([1] * dim)
+        super().__init__(dim, shift, rotation_matrix, bound)
+
     def __call__(self, x):
         x = self.decode(x)
         l = 100*np.sum((np.delete(x, 0, 0) - np.delete(x, -1, 0 )**2) ** 2)
@@ -125,8 +138,10 @@ class Schwefel(AbstractFunc):
         global optima = 420.9687^d
     '''
     def __init__(self, dim, shift: list = 0, rotation_matrix: np.ndarray = None, bound: tuple = None, fixed = False):
+        self.global_optimal = np.array([0] * dim)
         super().__init__(dim, shift, rotation_matrix, bound)
         self.fixed = fixed
+        
     def __call__(self, x):
         x = self.decode(x)
         if self.fixed:
