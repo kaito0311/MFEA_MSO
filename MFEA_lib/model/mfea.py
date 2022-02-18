@@ -98,7 +98,6 @@ class MFEA_base(AbstractModel):
                 dim = self.dim_uss,
                 bound= bound_pop,
                 list_tasks= self.tasks,
-                evaluate_initial_skillFactor = evaluate_initial_skillFactor
             )
 
             while len(offsprings) < len(population):
@@ -139,7 +138,7 @@ class MFEA_base(AbstractModel):
                 if log_oneline == False:
                     print("\n")
                 sys.stdout.flush()
-        print('END!')
+        print('\nEND!')
 
         #solve
         self.last_pop = population
